@@ -1,171 +1,24 @@
 # unite-schema
-共通ベクトルタイルスキーマ（試論）
+unite-schema is a common vector tile schema that takes these 9 layers.
 
-# このベクトルタイルスキーマの考え方
-## レイヤは作業の分離のためと考える
-レイヤはクラス名とは考えず、データを１０個程度のバケツに便宜的に束ねるためのラベルと考えます。
-## 点・線・面をレイヤでは区別しない
-mapbox style では、ジオメトリの型を判別できます。
-## レイヤの数はなるべく少なくする
-data-driven style を活用することを前提にすれば、レイヤの数が少ない方が style.json の記述量を圧縮できる可能性が高まります。style.json が肥大化すると、ベクトルタイルウェブ地図の立ち上がりが遅くなる恐れがあるので、style.json の記述量を抑えることは重要です。
-## データ間の相互運用の可能性を高める
-共通ベクトルタイルスキーマを使うことで、異なるソースデータから来たベクトルタイルの相互運用が高まることを期待します。
-## 属性については個々のデータセットに任せる
-属性は多様です。OpenStreetMap のように、自由なものもあります。このため、属性については共通ベクトルタイルスキーマでは縛らないことを考えます。
+1. nature
+2. water
+3. boundary
+4. road
+5. railway
+6. route
+7. structure
+8. building
+9. place
 
-# 共通ベクトルタイルスキーマ
-下記１０枚のレイヤで共通ベクトルタイルスキーマを構成します。以下に列挙する順番は、概ね描画順が早い順になることを意識しています。
-
-## (1) nature
-水関係を除く自然関係の主に面的情報を収めます。
-
-### OpenStreetMap の場合
-landuse タグまたは natural タグが付いている地物が nature レイヤに入るということを意識しています。ただし、natural=water や natural=coastline は water レイヤに収めましょう。nature レイヤに入るものを例示すると次のとおり。
-
-- landuse=residential
-- landuse=farmland
-- landuse=forest
-- landuse=grass
-- landuse=meadow
-- landuse=farmland
-- landuse=orchard
-- landuse=industrial
-- natural=tree
-- natural=wood
-- natural=scrub
-- natural=wetland
-- natural=coastline
-
-### 国土基本情報の場合
-- 5521 滝の水部構造物線
-- 5801 滝の領域
-- 7351 ふつうの等高線
-- 7352 等高線に数値が入るところ
-- 7353 等高線が崖に重なるところ
-- 7371 ふつうの等深線
-- 7372 等深線に数値が入るところ
-- 7373 等深線が崖に重なるところ
-- 7401 湿地の地形表記面
-- 7402 万年雪の地形表記面
-- 7403 領域が明瞭な砂礫地の地形表記面
-- 7501 コンクリートな土崖
-- 7502 コンクリートでない土崖
-- 7509 不明な土崖
-- 7511 岩崖
-- 7512 岩
-- 7513 段丘崖
-- 7521 雨裂の上部
-- 7531 大凹地の方向線
-- 7532 小凹地の方向線
-- 7533 凹地の方向線
-- 7541 隠顕岩
-- 7551 干潟界
-- 7561 枯れ川水涯線
-- 7571 湖底急斜面
-- 7572 水部の凹地の方向線
-- 7601 領域が不明瞭な砂礫地の地形記号
-- 7621 雨裂の下部
-
-植生記号を nature に入れるべきか迷いますが、あれは地図記号というシンボルであるという特性が強いと判断して、place に収めることを案にします。
-
-描画順として、かなり後ろになるだろうし、というのもその判断の根拠です。nature は、基本的には描画順が一番早いものを扱う性質にしたいと思います。
-
-## (2) water
-水関係のあらゆる情報を収めます。多くのデータが、水関係を多くのレイヤに分けていますが、属性のスキーマから自由になれるのであれば、水関係は一枚のレイヤに統合した方が利便性が高く、スタイルがコンパクトになると予想しています。
-
-海岸線は水なのか行政界なのか迷うところですが、今回は海岸線は water に収める提案をします。
-
-### OpenStreetMap の場合
-- natural=water
-- natural=coastline
-- waterway=stream
-- waterway=ditch
-- waterway=river
-- waterway=drain
-- waterway=canal
-
-### 国土基本情報の場合
-- 5100 海の領域
-- 5101 海岸線
-- 5102 海岸線の岩などに接する部分
-- 5103 海岸線の堤防等に接する部分
-- 5111 海側の河口線
-- 5121 海岸線の露岩
-    case '5188': // その他の海岸線
-    case '5199': // 不明な海岸線
-    case '5200': // 河川と湖池の水域
-    case '5201': // 河川
-    case '5202': // 河川の岩等に接する部分
-    case '5203': // 河川の堤防等に接する部分
-    case '5211': // 河川側の河口線
-    case '5212': // 河川側の湖池界線
-    case '5221': // 河川の露岩
-    case '5231': // 湖池の通常部
-    case '5232': // 湖池の岩等に接する部分
-    case '5233': // 湖池の堤防等に接する部分
-    case '5242': // 湖池側の湖池界線
-    case '5251': // 湖池の露岩
-    case '5288': // その他の水涯線
-    case '5299': // 不明な水涯線
-    case '5301': // 一条河川の通常部
-    case '5302': // 一条河川の枯れ川部
-    case '5311': // 二条河川中心線の通常部
-    case '5312': // 二条河川中心線の枯れ川部
-    case '5321': // 空間の人工水路
-    case '5322': // 地下の人工水路
-    case '5331': // 用水路
-    case '5388': // その他の河川中心線
-    case '5399': // 不明な河川中心線
-    case '5911': // 流水方向
-
-
-## (3) boundary
-境界関係のデータを収めます。面（いわゆる Administrative Area）や点のデータもここに収めますが、レイヤ名としては boundary にしたいと思います。
-
-### OpenStreetMap の場合
-
-### 国土基本情報の場合
-
-## (4) structure
-道路、水管理、公共交通、電力関係のあらゆる（インフラ）ストラクチャーを収めます。
-
-### OpenStreetMap の場合
-- waterway=riverbank
-
-### 国土基本情報の場合
-
-## (5) route
-あらゆる種類の非物理的なルートを収めます。具体的には、フェリールートやバスルートを収めます。 
-
-### OpenStreetMap の場合
-
-### 国土基本情報の場合
-
-## (6) road
-道路の情報を収めます。 ただし、道路関係施設は、公共交通機関のインフラを収める transport に収めます。道路番号のデータが別個にある場合には、この road に収めます。
-
-### OpenStreetMap の場合
-
-### 国土基本情報の場合
-
-## (7) railway 
-鉄道の情報を収めます。ただし、鉄道関係施設は、公共交通機関のインフラを収める transport に収めます。駅の扱いはデータモデルによって微妙に異なることになると重ますが、常識的に判断しましょう。
-
-### OpenStreetMap の場合
-
-### 国土基本情報の場合
-
-## (8) building
-建物の情報を収めます。
-
-### OpenStreetMap の場合
-
-### 国土基本情報の場合
-
-## (9) place
-アイコン・地図記号や注記を発生するあらゆる場所情報を収めます。典型的には、POI データが収まります。 
-
-### OpenStreetMap の場合
-
-### 国土基本情報の場合
-
+# the idea behind this vector tile schema
+## Vector tile layers are for separation of work.
+Consider layers as labels to divide data into 9 butkets. Do not consider layers as classes in object-oriented feature models.
+## Do not distinguish between Point, LineString and Polygon/MultiPolygon
+You can distinguish geometry types in Mapbox Style.
+## Have a small number of layers
+We likely compress the size of style.json if we take data-driven style granted. A huge style.json likely makes the start of the web map slow.
+## Have more possibilities for interoperability between datasets
+We expect more possibility for interoerabilities of vector tiles from different datasources.
+## Properties depends on respective datasets
+There are diversity in properties rather than feature types. OpenStreetMap data model is a tag-based open one. Therefore the unite-schema will not have any constraint on properties. Amount of the properties will probably be decided by the vector tile size optimization criteria. 
